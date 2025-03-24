@@ -8,7 +8,7 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
-   
+    "@repo/db":"workspace:*",
     "express": "^4.21.2"
   },
   "devDependencies": {
@@ -16,6 +16,7 @@
     "@types/express": "^5.0.0",
     "@repo/backendcommon": "workspace:*",
     "@repo/common":"workspace:*"
+   
   },
   "keywords": [],
   "author": "",
