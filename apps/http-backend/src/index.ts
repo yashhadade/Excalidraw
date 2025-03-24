@@ -3,12 +3,12 @@ import {  Request,Response } from "express";
 import  jwt  from "jsonwebtoken"
 import * as dotenv from 'dotenv';
 import { middleware } from "./middleWare/middleware";
-import {JWT_SECRETE} from "@repo/backendcommon/config"
+// import {JWT_SECRETE} from "@repo/backendcommon/config"
 import {CreateUserSchema,SignInSchema,CreateRoomSchema} from "@repo/common/types"
 import {prismaClient} from "@repo/db/client"
 
-// dotenv.config();
-// const JWT_SECRETE = process.env.SECRET_KEY;
+dotenv.config();
+const JWT_SECRETE = process.env.SECRET_KEY;
 const app=express()
 app.use(express.json())
 app.post("/signUp",async (req,res)=>{
@@ -39,37 +39,56 @@ app.post("/signUp",async (req,res)=>{
       
    
 })
-app.post("/signIn", async (req:Request,res:Response): Promise<any>=>{
-    const data=SignInSchema.safeParse(req.body);
-    if(!data.success){
-        res.json({
-            message:"Incorrect Input"
-        })
-    }
+app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
     try {
-        
-    } catch (error) {
-        
-    }
-const user= await prismaClient.user.findFirst({
-    where:{
-        email:data.data?.username,
-        password: data.data?.password
-    }
-})
-if(!user){
-    return res.status(404).json({
-        message:"user Not found"
-    })
-}
-  const token= jwt.sign({
-        userId:user?.id
-    }, JWT_SECRETE as string)
+        console.log(req.body);
 
-    res.json({
-        token
-    })
-})
+        // Validate input
+        const data = SignInSchema.safeParse(req.body);
+console.log(data)
+        if (!data.success) {
+            return res.status(400).json({
+                data: data,
+                message: "Incorrect Input"
+            });
+        }
+
+        // Try to find the user in the database
+        const user = await prismaClient.user.findFirst({
+            where: {
+                email: data.data?.email,
+                password: data.data?.password
+            }
+        });
+        console.log(user)
+        // If user not found, return 404
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+console.log(JWT_SECRETE);
+        // Generate JWT token
+        const token = jwt.sign({
+            userId: user?.id
+        }, JWT_SECRETE as string);
+        console.log(token)
+        // Return the success response with the token
+        return res.json({
+            success: true,
+            token: token
+        });
+
+    } catch (error) {
+        // Catch and handle errors gracefully
+        console.error("Internal Server Error: ", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+});
+
 
 app.post("/room",middleware,async (req:Request,res:Response): Promise<any>=>{
 const data = CreateRoomSchema.safeParse(req.body);
