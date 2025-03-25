@@ -1,14 +1,14 @@
 import express from "express"
 import {  Request,Response } from "express";
 import  jwt  from "jsonwebtoken"
-import * as dotenv from 'dotenv';
+// import * as dotenv from 'dotenv';
 import { middleware } from "./middleWare/middleware";
-// import {JWT_SECRETE} from "@repo/backendcommon/config"
+import {JWT_SECRETE} from "@repo/backendcommon/config"
 import {CreateUserSchema,SignInSchema,CreateRoomSchema} from "@repo/common/types"
 import {prismaClient} from "@repo/db/client"
 
-dotenv.config();
-const JWT_SECRETE = process.env.SECRET_KEY;
+// dotenv.config();
+// const JWT_SECRETE = process.env.SECRET_KEY;
 const app=express()
 app.use(express.json())
 app.post("/signUp",async (req,res)=>{
@@ -91,23 +91,30 @@ console.log(JWT_SECRETE);
 
 
 app.post("/room",middleware,async (req:Request,res:Response): Promise<any>=>{
-const data = CreateRoomSchema.safeParse(req.body);
-if(!data.success){
-    return res.json({
-        message:"Incurrect Input"
-    })
-}
-const userId=req.userId;
-await prismaClient.room.create({
-    data:{
-        slug:data.data?.name,
-        adminId:userId,
-        
+    try {
+        const data = CreateRoomSchema.safeParse(req.body);
+        if(!data.success){
+            return res.json({
+                message:"Incurrect Input"
+            })
+        }
+        const userId=req.userId;
+        const room=await prismaClient.room.create({
+            data:{
+                slug:data.data?.name,
+                adminId:userId,
+                
+            }
+        })
+            res.json({
+                roomId:room.id
+            }) 
+    } catch (error) {
+        res.status(500).json({
+            message:`Error ${error}`
+        })
     }
-})
-    res.json({
-        roomId:123
-    })
+
 })
 app.listen(5000,()=>{
     console.log("server is running on 5000")
