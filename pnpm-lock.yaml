@@ -89,6 +89,9 @@ importers:
 
   apps/ws-backend:
     dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       ws:
         specifier: ^8.18.1
         version: 8.18.1

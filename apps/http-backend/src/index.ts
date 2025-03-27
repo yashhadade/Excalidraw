@@ -45,7 +45,6 @@ app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
 
         // Validate input
         const data = SignInSchema.safeParse(req.body);
-console.log(data)
         if (!data.success) {
             return res.status(400).json({
                 data: data,
@@ -60,14 +59,14 @@ console.log(data)
                 password: data.data?.password
             }
         });
-        console.log(user)
+     
         // If user not found, return 404
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
             });
         }
-console.log(JWT_SECRETE);
+
         // Generate JWT token
         const token = jwt.sign({
             userId: user?.id
@@ -115,6 +114,20 @@ app.post("/room",middleware,async (req:Request,res:Response): Promise<any>=>{
         })
     }
 
+})
+
+app.get("/chats/:roomId",middleware, async (req:Request,res:Response): Promise<any>=>{
+const roomId = Number(req.params.roomId);
+const message =await prismaClient.chat.findMany({
+    where:{
+        roomId:roomId
+    },
+    orderBy:{id:"desc"},
+    take:50
+})
+res.json({
+message:message
+})
 })
 app.listen(5000,()=>{
     console.log("server is running on 5000")

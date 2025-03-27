@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import { JWT_SECRETE } from "@repo/backendcommon/config";
-
+import {prismaClient} from "@repo/db/client"
 const wss = new WebSocketServer({ port: 8080 });
 
 interface JwtPayload {
@@ -44,9 +44,12 @@ wss.on("connection", function connection(ws: WebSocket, request) {
     }
 
     const queryParams = new URLSearchParams(url.split('?')[1]);
+    
     const token = queryParams.get('token') || "";
+
     const userId = checkUser(token);
-    console.log(userId)
+
+
     if (userId == null) {
         console.log("ertyui")
         ws.close();
@@ -60,7 +63,7 @@ wss.on("connection", function connection(ws: WebSocket, request) {
         ws,
     });
 
-    ws.on("message", function message(data) {
+    ws.on("message",async  function message(data) {
         let parsedData;
         try {
             parsedData = JSON.parse(data as unknown as string);
@@ -89,7 +92,13 @@ wss.on("connection", function connection(ws: WebSocket, request) {
         if (parsedData.type === "chat") {
             const roomId = parsedData.roomId;
             const message = parsedData.message;
-
+            await prismaClient.chat.create({
+                data:{
+                    roomId,
+                    message,
+                    userId
+                }
+            })
             users.forEach(user => {
                 if (user.room.includes(roomId)) {
                     user.ws.send(JSON.stringify({
