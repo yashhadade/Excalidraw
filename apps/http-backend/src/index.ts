@@ -1,43 +1,43 @@
 import express from "express"
-import {  Request,Response } from "express";
-import  jwt  from "jsonwebtoken"
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken"
 // import * as dotenv from 'dotenv';
 import { middleware } from "./middleWare/middleware";
-import {JWT_SECRETE} from "@repo/backendcommon/config"
-import {CreateUserSchema,SignInSchema,CreateRoomSchema} from "@repo/common/types"
-import {prismaClient} from "@repo/db/client"
+import { JWT_SECRETE } from "@repo/backendcommon/config"
+import { CreateUserSchema, SignInSchema, CreateRoomSchema } from "@repo/common/types"
+import { prismaClient } from "@repo/db/client"
 
 // dotenv.config();
 // const JWT_SECRETE = process.env.SECRET_KEY;
-const app=express()
+const app = express()
 app.use(express.json())
-app.post("/signUp",async (req,res)=>{
-    const parsedData=CreateUserSchema.safeParse(req.body)
-    if(!parsedData.success){
+app.post("/signUp", async (req, res) => {
+    const parsedData = CreateUserSchema.safeParse(req.body)
+    if (!parsedData.success) {
         res.json({
-            message:"Incorrect Input"
+            message: "Incorrect Input"
         })
     }
     try {
-       const user= await prismaClient.user.create({
+        const user = await prismaClient.user.create({
             data: {
-              username: parsedData.data?.username ?? 'default_username', 
-              password: parsedData.data?.password ?? 'default_password', 
-              email: parsedData.data?.email ?? 'default_email@example.com', 
+                username: parsedData.data?.username ?? 'default_username',
+                password: parsedData.data?.password ?? 'default_password',
+                email: parsedData.data?.email ?? 'default_email@example.com',
             },
-          });
+        });
 
-          res.json({
-            userId:user.id
+        res.json({
+            userId: user.id
         })
     } catch (error) {
         res.status(411).json({
-            message:"User alredy exists with this username"
+            message: "User alredy exists with this username"
         })
     }
-    
-      
-   
+
+
+
 })
 app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
     try {
@@ -59,7 +59,7 @@ app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
                 password: data.data?.password
             }
         });
-     
+
         // If user not found, return 404
         if (!user) {
             return res.status(404).json({
@@ -89,46 +89,58 @@ app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
 });
 
 
-app.post("/room",middleware,async (req:Request,res:Response): Promise<any>=>{
+app.post("/room", middleware, async (req: Request, res: Response): Promise<any> => {
     try {
         const data = CreateRoomSchema.safeParse(req.body);
-        if(!data.success){
+        if (!data.success) {
             return res.json({
-                message:"Incurrect Input"
+                message: "Incurrect Input"
             })
         }
-        const userId=req.userId;
-        const room=await prismaClient.room.create({
-            data:{
-                slug:data.data?.name,
-                adminId:userId,
-                
+        const userId = req.userId;
+        const room = await prismaClient.room.create({
+            data: {
+                slug: data.data?.name,
+                adminId: userId,
+
             }
         })
-            res.json({
-                roomId:room.id
-            }) 
+        res.json({
+            roomId: room.id
+        })
     } catch (error) {
         res.status(500).json({
-            message:`Error ${error}`
+            message: `Error ${error}`
         })
     }
 
 })
 
-app.get("/chats/:roomId",middleware, async (req:Request,res:Response): Promise<any>=>{
-const roomId = Number(req.params.roomId);
-const message =await prismaClient.chat.findMany({
-    where:{
-        roomId:roomId
-    },
-    orderBy:{id:"desc"},
-    take:50
+app.get("/chats/:roomId", middleware, async (req: Request, res: Response): Promise<any> => {
+    const roomId = Number(req.params.roomId);
+    const message = await prismaClient.chat.findMany({
+        where: {
+            roomId: roomId
+        },
+        orderBy: { id: "desc" },
+        take: 50
+    })
+    res.json({
+        message: message
+    })
 })
-res.json({
-message:message
+
+app.get("/room/:slug", async (req: Request, res: Response): Promise<any> => {
+    const slug = req.params.slug;
+    const room = await prismaClient.room.findFirst({
+        where: {
+            slug: slug
+        },
+    })
+    res.json({
+        room: room
+    })
 })
-})
-app.listen(5000,()=>{
+app.listen(5000, () => {
     console.log("server is running on 5000")
 })
