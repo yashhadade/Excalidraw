@@ -22,10 +22,15 @@ useEffect(()=>{
             }
         }
     }
+    return ()=>{
+        socket?.close()
+    }
 },[socket,loading,id])
 
 return <div>
-    {message.map(m=><div>{m.message}</div>)}
+    {chat.map((m, index) => (
+  <div key={index}>{m.message}</div>
+))}
 
     <input type="text" value={currentMessage} onChange={e=>{setCurrentMessage(e.target.value)}}></input>
     <button onClick={()=>{

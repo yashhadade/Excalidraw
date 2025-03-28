@@ -116,18 +116,27 @@ app.post("/room", middleware, async (req: Request, res: Response): Promise<any> 
 
 })
 
-app.get("/chats/:roomId", middleware, async (req: Request, res: Response): Promise<any> => {
-    const roomId = Number(req.params.roomId);
-    const message = await prismaClient.chat.findMany({
-        where: {
-            roomId: roomId
-        },
-        orderBy: { id: "desc" },
-        take: 50
-    })
-    res.json({
-        message: message
-    })
+app.get("/chats/:roomId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const roomId = Number(req.params.roomId);
+        const message = await prismaClient.chat.findMany({
+            where: {
+                roomId: roomId
+            },
+            orderBy: { id: "desc" },
+            take: 50
+        })
+        res.json({
+            message: message
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({
+           
+            message: "InterServer Serr"+error,
+        })
+    }
+   
 })
 
 app.get("/room/:slug", async (req: Request, res: Response): Promise<any> => {
