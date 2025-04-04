@@ -6,11 +6,12 @@ import { middleware } from "./middleWare/middleware";
 import { JWT_SECRETE } from "@repo/backendcommon/config"
 import { CreateUserSchema, SignInSchema, CreateRoomSchema } from "@repo/common/types"
 import { prismaClient } from "@repo/db/client"
-
+import cors from "cors";
 // dotenv.config();
 // const JWT_SECRETE = process.env.SECRET_KEY;
 const app = express()
 app.use(express.json())
+app.use(cors());
 app.post("/signUp", async (req, res) => {
     const parsedData = CreateUserSchema.safeParse(req.body)
     if (!parsedData.success) {
