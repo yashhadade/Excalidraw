@@ -29,6 +29,7 @@ app.post("/signUp", async (req, res) => {
         });
 
         res.json({
+            success: true,
             userId: user.id
         })
     } catch (error) {
@@ -40,6 +41,7 @@ app.post("/signUp", async (req, res) => {
 
 
 })
+
 app.post("/signIn", async (req: Request, res: Response): Promise<any> => {
     try {
         console.log(req.body);
@@ -107,6 +109,7 @@ app.post("/room", middleware, async (req: Request, res: Response): Promise<any> 
             }
         })
         res.json({
+            success: true,
             roomId: room.id
         })
     } catch (error) {
@@ -117,6 +120,35 @@ app.post("/room", middleware, async (req: Request, res: Response): Promise<any> 
 
 })
 
+app.get("/room",middleware, async (req: Request, res: Response): Promise<any> => {
+    const userId = req.userId;
+    const rooms = await prismaClient.room.findMany({
+        where: {
+            adminId: userId
+        }
+    })
+    res.json({
+        success: true,
+        rooms: rooms
+    })
+}) 
+
+
+app.get("/allroom",middleware, async (req: Request, res: Response): Promise<any> => {
+    const userId = req.userId;
+    const rooms = await prismaClient.room.findMany({
+        where: {
+            NOT: {
+                adminId: userId
+            }   
+        }
+    })
+    res.json({
+        success: true,
+        rooms: rooms
+    })
+})  
+
 app.get("/chats/:roomId", async (req: Request, res: Response): Promise<any> => {
     try {
         const roomId = Number(req.params.roomId);
@@ -125,9 +157,10 @@ app.get("/chats/:roomId", async (req: Request, res: Response): Promise<any> => {
                 roomId: roomId
             },
             orderBy: { id: "desc" },
-            take: 50
+            take: 1000
         })
         res.json({
+            success: true,
             message: message
         })
     } catch (error) {
@@ -148,6 +181,7 @@ app.get("/room/:slug", async (req: Request, res: Response): Promise<any> => {
         },
     })
     res.json({
+        success: true,
         room: room
     })
 })

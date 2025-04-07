@@ -2,24 +2,23 @@
 import { useEffect, useRef, useState } from "react";
 import { initDraw } from "../draw";
 import { IconButton } from "./IconButton";
-import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react";
-type Shape= "circle"|"rect"|"pencil"
+import { Circle, Pencil, RectangleHorizontalIcon, Triangle } from "lucide-react";
+import { Game } from "../draw/Game";
+export type Tool= "circle"|"rect"|"pencil"|"triangle"
 export function Canvas({ roomId, socket }: {
     roomId: string;
     socket: WebSocket
 }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [selectedTool,setSelectedTool]=useState<Shape>("circle")
-
+    const [selectedTool,setSelectedTool]=useState<Tool>("circle")
+    const [game,setGame]=useState<Game>()
     useEffect(()=>{
-        //@ts-ignore
-        window.selectedTool=selectedTool
-    },[selectedTool])
+        game?.setTool(selectedTool)
+    },[selectedTool,game])
     useEffect(() => {
         if (canvasRef.current) {
-            const canvas = canvasRef.current
-
-            initDraw(canvas, roomId, socket)
+            const g=new Game(canvasRef.current, roomId, socket)
+            setGame(g)
         }
     }, [canvasRef])
 
@@ -31,14 +30,15 @@ export function Canvas({ roomId, socket }: {
 }
 
 function TopBar({selectedTool,setSelectedTool}:{
-    selectedTool:Shape,
-    setSelectedTool:(s:Shape)=>void
+    selectedTool:Tool,
+    setSelectedTool:(s:Tool)=>void
 }) {
     return <div style={{ position: "fixed", top: 10, left: 10 }}>
         <div className=" flex gap-1">
             <IconButton activated={selectedTool==="pencil"} icon={<Pencil />} onClick={() => {setSelectedTool("pencil") }}/>
             <IconButton  activated={selectedTool==="rect"} icon={<RectangleHorizontalIcon />} onClick={() => {setSelectedTool("rect") }}/>
             <IconButton activated={selectedTool==="circle"} icon={<Circle />} onClick={() => {setSelectedTool("circle") }}/>
+            <IconButton activated={selectedTool==="triangle"} icon={<Triangle />} onClick={() => {setSelectedTool("triangle") }}/>
 
         </div>
     </div>
